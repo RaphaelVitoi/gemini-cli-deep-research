@@ -1,23 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
+type AnyMockFn = (...args: any[]) => any;
+
 // Mock the gemini-utils module
-const mockCreateStore = jest.fn();
-const mockListStores = jest.fn();
-const mockDeleteStore = jest.fn();
-const mockQueryStore = jest.fn();
-const mockUploadFile = jest.fn();
-const mockUploadDirectory = jest.fn();
-const mockCreateOperation = jest.fn();
-const mockGetOperation = jest.fn();
-const mockMarkInProgress = jest.fn();
-const mockMarkCompleted = jest.fn();
-const mockMarkFailed = jest.fn();
-const mockUpdateProgress = jest.fn();
-const mockAddFailedFile = jest.fn();
-const mockStartResearch = jest.fn();
-const mockGetStatus = jest.fn();
-const mockPoll = jest.fn();
-const mockGenerateMarkdown = jest.fn();
+const mockCreateStore = jest.fn<AnyMockFn>();
+const mockListStores = jest.fn<AnyMockFn>();
+const mockDeleteStore = jest.fn<AnyMockFn>();
+const mockQueryStore = jest.fn<AnyMockFn>();
+const mockUploadFile = jest.fn<AnyMockFn>();
+const mockUploadDirectory = jest.fn<AnyMockFn>();
+const mockCreateOperation = jest.fn<AnyMockFn>();
+const mockGetOperation = jest.fn<AnyMockFn>();
+const mockMarkInProgress = jest.fn<AnyMockFn>();
+const mockMarkCompleted = jest.fn<AnyMockFn>();
+const mockMarkFailed = jest.fn<AnyMockFn>();
+const mockUpdateProgress = jest.fn<AnyMockFn>();
+const mockAddFailedFile = jest.fn<AnyMockFn>();
+const mockStartResearch = jest.fn<AnyMockFn>();
+const mockGetStatus = jest.fn<AnyMockFn>();
+const mockPoll = jest.fn<AnyMockFn>();
+const mockGenerateMarkdown = jest.fn<AnyMockFn>();
 
 jest.unstable_mockModule('@allenhutchison/gemini-utils', () => ({
   FileSearchManager: jest.fn().mockImplementation(() => ({
@@ -62,10 +65,10 @@ jest.unstable_mockModule('@google/genai', () => ({
 }));
 
 // Mock fs
-const mockExistsSync = jest.fn();
-const mockStatSync = jest.fn();
-const mockWriteFileSync = jest.fn();
-const mockReadFileSync = jest.fn();
+const mockExistsSync = jest.fn<AnyMockFn>();
+const mockStatSync = jest.fn<AnyMockFn>();
+const mockWriteFileSync = jest.fn<AnyMockFn>();
+const mockReadFileSync = jest.fn<AnyMockFn>();
 
 jest.unstable_mockModule('fs', () => ({
   default: {
@@ -81,12 +84,12 @@ jest.unstable_mockModule('fs', () => ({
 }));
 
 // Mock WorkspaceConfig
-const mockAddFileSearchStore = jest.fn();
-const mockAddResearchId = jest.fn();
-const mockLoad = jest.fn();
-const mockAddPendingResearch = jest.fn();
-const mockRemovePendingResearch = jest.fn();
-const mockGetAllPendingResearch = jest.fn(() => ({}));
+const mockAddFileSearchStore = jest.fn<AnyMockFn>();
+const mockAddResearchId = jest.fn<AnyMockFn>();
+const mockLoad = jest.fn<AnyMockFn>();
+const mockAddPendingResearch = jest.fn<AnyMockFn>();
+const mockRemovePendingResearch = jest.fn<AnyMockFn>();
+const mockGetAllPendingResearch = jest.fn<AnyMockFn>(() => ({}));
 
 jest.unstable_mockModule('./config/WorkspaceConfig.js', () => ({
   WorkspaceConfigManager: {
@@ -101,8 +104,8 @@ jest.unstable_mockModule('./config/WorkspaceConfig.js', () => ({
 }));
 
 // Mock MCP SDK
-const mockRegisterTool = jest.fn();
-const mockConnect = jest.fn();
+const mockRegisterTool = jest.fn<AnyMockFn>();
+const mockConnect = jest.fn<AnyMockFn>();
 
 jest.unstable_mockModule('@modelcontextprotocol/sdk/server/mcp.js', () => ({
   McpServer: jest.fn().mockImplementation(() => ({

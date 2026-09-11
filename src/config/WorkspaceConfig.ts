@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { z } from 'zod';
 import { OperationStorage, UploadOperation } from '@allenhutchison/gemini-utils';
 
@@ -44,7 +44,7 @@ export const WorkspaceConfigSchema = z.object({
 export type WorkspaceConfig = z.infer<typeof WorkspaceConfigSchema>;
 
 export class WorkspaceConfigManager {
-  private static configPath = path.resolve(process.cwd(), '.gemini-research.json');
+  private static readonly configPath = path.resolve(process.cwd(), '.gemini-research.json');
 
   static load(): WorkspaceConfig {
     if (!fs.existsSync(this.configPath)) {

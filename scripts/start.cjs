@@ -1,3 +1,5 @@
+/* global require, process, __dirname, console */
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
 /**
  * MCP-safe start script.
  *

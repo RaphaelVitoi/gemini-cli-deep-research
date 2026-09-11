@@ -1,5 +1,5 @@
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import path from 'path';
+import { jest, describe, it, expect, beforeEach, beforeAll } from '@jest/globals';
+import path from 'node:path';
 
 const mockWriteFileSync = jest.fn();
 const mockExistsSync = jest.fn(() => true);
@@ -21,8 +21,15 @@ jest.unstable_mockModule('fs', () => ({
   writeFileSync: mockWriteFileSync,
 }));
 
-const { ResearchWatcher } = await import('./ResearchWatcher');
-const { WorkspaceConfigManager } = await import('./config/WorkspaceConfig');
+let ResearchWatcher!: typeof import('./ResearchWatcher.js').ResearchWatcher;
+let WorkspaceConfigManager!: typeof import('./config/WorkspaceConfig.js').WorkspaceConfigManager;
+
+beforeAll(async () => {
+  const watcherMod = await import('./ResearchWatcher.js');
+  const configMod = await import('./config/WorkspaceConfig.js');
+  ResearchWatcher = watcherMod.ResearchWatcher;
+  WorkspaceConfigManager = configMod.WorkspaceConfigManager;
+});
 
 describe('ResearchWatcher', () => {
   const workspaceRoot = '/tmp/research-watcher-test';

@@ -1,6 +1,8 @@
+/* global console */
+import process from 'node:process';
 import * as esbuild from 'esbuild';
-import { rm } from 'fs/promises';
-import { readFileSync } from 'fs';
+import { rm } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 
 // Read version from package.json for build-time injection
 const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));

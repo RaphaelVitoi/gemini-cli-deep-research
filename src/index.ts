@@ -14,8 +14,18 @@ import {
 } from '@allenhutchison/gemini-utils';
 import { WorkspaceConfigManager, WorkspaceOperationStorage } from './config/WorkspaceConfig.js';
 import { ResearchWatcher } from './ResearchWatcher.js';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
+function formatErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return JSON.stringify(error);
+}
 
 // Initialize SDK and Managers (lazy — deferred until first tool call)
 const apiKey = process.env.GEMINI_DEEP_RESEARCH_API_KEY || process.env.GEMINI_API_KEY;
@@ -41,30 +51,22 @@ function getClient(): GoogleGenAI {
   if (!apiKey) {
     throw new Error(MISSING_API_KEY_MESSAGE);
   }
-  if (!_client) {
-    _client = new GoogleGenAI({ apiKey, vertexai: false });
-  }
+  _client ??= new GoogleGenAI({ apiKey, vertexai: false });
   return _client;
 }
 
 function getFileSearchManager(): FileSearchManager {
-  if (!_fileSearchManager) {
-    _fileSearchManager = new FileSearchManager(getClient());
-  }
+  _fileSearchManager ??= new FileSearchManager(getClient());
   return _fileSearchManager;
 }
 
 function getFileUploader(): FileUploader {
-  if (!_fileUploader) {
-    _fileUploader = new FileUploader(getClient());
-  }
+  _fileUploader ??= new FileUploader(getClient());
   return _fileUploader;
 }
 
 function getResearchManager(): ResearchManager {
-  if (!_researchManager) {
-    _researchManager = new ResearchManager(getClient());
-  }
+  _researchManager ??= new ResearchManager(getClient());
   return _researchManager;
 }
 
@@ -73,12 +75,10 @@ const reportGenerator = new ReportGenerator();
 
 let _researchWatcher: ResearchWatcher | undefined;
 function getResearchWatcher(): ResearchWatcher {
-  if (!_researchWatcher) {
-    _researchWatcher = new ResearchWatcher({
-      researchManager: getResearchManager(),
-      reportGenerator,
-    });
-  }
+  _researchWatcher ??= new ResearchWatcher({
+    researchManager: getResearchManager(),
+    reportGenerator,
+  });
   return _researchWatcher;
 }
 
@@ -138,7 +138,7 @@ server.registerTool(
     try {
       uploader = getFileUploader();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = formatErrorMessage(error);
       return { isError: true, content: [{ type: 'text', text: message }] };
     }
 
@@ -202,7 +202,7 @@ server.registerTool(
           console.error(`[${operationId}] Upload complete`);
         }
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = formatErrorMessage(error);
         console.error(`[${operationId}] Upload failed:`, message);
         uploadOperationManager.markFailed(operationId, message);
       }
@@ -300,7 +300,7 @@ server.registerTool(
 
       return { content: [{ type: 'text', text }] };
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = formatErrorMessage(error);
       return { isError: true, content: [{ type: 'text', text: `Query failed: ${message}` }] };
     }
   }
@@ -348,7 +348,7 @@ server.registerTool(
         }]
       };
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = formatErrorMessage(error);
       const isQuotaError = message.includes('429') || message.toLowerCase().includes('quota') || message.toLowerCase().includes('too many requests');
 
       if (isQuotaError) {
@@ -439,7 +439,9 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error('Fatal error in main:', error);
   process.exit(1);
-});
+}

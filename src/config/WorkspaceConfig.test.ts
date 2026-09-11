@@ -1,5 +1,5 @@
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import path from 'path';
+import { jest, describe, it, expect, beforeEach, beforeAll } from '@jest/globals';
+import path from 'node:path';
 
 // Mock fs before importing WorkspaceConfigManager
 const mockExistsSync = jest.fn();
@@ -17,8 +17,14 @@ jest.unstable_mockModule('fs', () => ({
   writeFileSync: mockWriteFileSync,
 }));
 
-// Dynamic import after mocking
-const { WorkspaceConfigManager } = await import('./WorkspaceConfig');
+let WorkspaceConfigManager!: typeof import('./WorkspaceConfig.js').WorkspaceConfigManager;
+let WorkspaceOperationStorage!: typeof import('./WorkspaceConfig.js').WorkspaceOperationStorage;
+
+beforeAll(async () => {
+  const mod = await import('./WorkspaceConfig.js');
+  WorkspaceConfigManager = mod.WorkspaceConfigManager;
+  WorkspaceOperationStorage = mod.WorkspaceOperationStorage;
+});
 
 describe('WorkspaceConfigManager', () => {
   const mockConfigPath = path.resolve(process.cwd(), '.gemini-research.json');
@@ -202,8 +208,7 @@ describe('WorkspaceConfigManager', () => {
   });
 });
 
-// Dynamic import WorkspaceOperationStorage
-const { WorkspaceOperationStorage } = await import('./WorkspaceConfig');
+
 
 describe('WorkspaceOperationStorage', () => {
   beforeEach(() => {
