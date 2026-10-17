@@ -156,7 +156,7 @@ server.registerTool(
     const operationId = operation.id;
 
     // Start the upload in the background (fire-and-forget)
-    (async (): Promise<void> => {
+    void (async (): Promise<void> => {
       try {
         if (stats.isDirectory()) {
           let completedFiles = 0;
