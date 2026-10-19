@@ -7,8 +7,122 @@ on:
 
 jobs:
   build-and-release:
-    uses: ./.github/workflows/build-and-release.yml
-    with:
-      tag: ${{ github.ref_name }}
+    runs-on: ubuntu-latest
     permissions:
       contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${TAG#v}" >> $GITHUB_OUTPUT
+        env:
+          TAG: ${{ github.ref_name }}
+
+      - name: Update versions in config files
+        run: |
+          set -e
+          VERSION="${{ steps.version.outputs.VERSION }}"
+
+          # Update package.json version
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+          # Helper function to safely update JSON file version
+          update_json_version() {
+            local file="$1"
+            local tmp_file="${file}.tmp"
+
+            # Check file exists
+            if [[ ! -f "$file" ]]; then
+              echo "Error: $file not found"
+              exit 1
+            fi
+
+            # Update version to temp file
+            if ! jq --arg v "$VERSION" '.version = $v' "$file" > "$tmp_file"; then
+              echo "Error: jq failed to process $file"
+              rm -f "$tmp_file"
+              exit 1
+            fi
+
+            # Validate temp file is well-formed JSON
+            if ! jq empty "$tmp_file" 2>/dev/null; then
+              echo "Error: Invalid JSON produced for $file"
+              rm -f "$tmp_file"
+              exit 1
+            fi
+
+            # Move temp file into place
+            mv "$tmp_file" "$file"
+            echo "Updated version in $file to $VERSION"
+          }
+
+          # Update both config files
+          update_json_version "gemini-extension.json"
+          update_json_version "release/gemini-extension.json"
+
+      - name: Create release archive
+        run: |
+          set -e
+          errors=()
+
+          # Validate required directories exist
+          for dir in dist commands skills; do
+            if [[ ! -d "$dir" ]]; then
+              errors+=("Missing required directory: $dir")
+            fi
+          done
+
+          # Validate required files exist
+          for file in release/gemini-extension.json deep-research-GEMINI.md dist/index.js skills/deep-research-start/SKILL.md; do
+            if [[ ! -f "$file" ]]; then
+              errors+=("Missing required file: $file")
+            fi
+          done
+
+          # Fail if any validation errors
+          if [[ ${#errors[@]} -gt 0 ]]; then
+            echo "Error: Release archive validation failed:"
+            for err in "${errors[@]}"; do
+              echo "  - $err"
+            done
+            exit 1
+          fi
+
+          # Create archive with bundled output (no node_modules needed)
+          tar -czvf release/gemini-deep-research.tar.gz \
+            --transform 's|release/gemini-extension.json|gemini-extension.json|' \
+            dist \
+            commands \
+            skills \
+            release/gemini-extension.json \
+            deep-research-GEMINI.md
+
+          echo "Release archive created: release/gemini-deep-research.tar.gz"
+          echo "Archive contents:"
+          tar -tzvf release/gemini-deep-research.tar.gz
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: release/gemini-deep-research.tar.gz
+          generate_release_notes: true
+          make_latest: true
