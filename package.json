@@ -8,7 +8,7 @@
     "build": "node build.mjs",
     "build:dev": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "test:mime-types": "ts-node scripts/test-mime-types.ts",
     "lint": "eslint src/",
     "prepublishOnly": "npm run build"
